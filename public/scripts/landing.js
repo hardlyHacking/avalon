@@ -5,20 +5,22 @@ class Landing extends React.Component {
   constructor(props) {
     super(props)
     this.state = { room: '', name: '', emptyRoomId: true, emptyName: true,
-                   delayTimer: null, validName: false, createClick: false, joinClick: false }
+                   delayTimer: null, validName: false, createClick: false,
+                   joinClick: false, isJoinRoom: false }
 
     this.createGame = this.createGame.bind(this)
     this.handleChange = this.handleChange.bind(this)
     this.joinGame = this.joinGame.bind(this)
     this.keyUp = this.keyUp.bind(this)
     this.renderForm = this.renderForm.bind(this)
+    this.renderInvalidNameError = this.renderInvalidNameError.bind(this)
 
     socket.on('room_code', function(data) {
-      this.setState({isJoinRoom: data.valid})
+      this.setState({ isJoinRoom: !data.valid })
     }.bind(this))
 
     socket.on('name_code', function(data) {
-      this.setState({validName: data.valid})
+      this.setState({ validName: data.valid })
     }.bind(this))
   }
 
@@ -96,12 +98,12 @@ class Landing extends React.Component {
           <tr>
             <td>
               <button className={"btn btn-primary"}
-                      disabled={!((!this.state.emptyRoomId && !this.state.emptyName) && this.state.joinRoom && !this.state.joinClick)}
+                      disabled={!(!this.state.emptyRoomId && !this.state.emptyName && this.state.isJoinRoom && !this.state.joinClick)}
                       onClick={this.joinGame}
                       type="button"
               >Join Game</button>
               <button className={"btn btn-success"}
-                      disabled={!((!this.state.emptyRoomId && !this.state.emptyName) && !this.state.joinRoom && !this.state.createClick)}
+                      disabled={!(!this.state.emptyRoomId && !this.state.emptyName && !this.state.isJoinRoom && !this.state.createClick)}
                       onClick={this.createGame}
                       type="button"
               >Create Game</button>
@@ -118,7 +120,7 @@ class Landing extends React.Component {
       return null;
     }
     return(
-      <div class="alert alert-danger" role="alert">
+      <div className={"alert alert-danger"} role="alert">
         Invalid user name for this particular Game Code.
       </div>
     )
@@ -133,5 +135,3 @@ class Landing extends React.Component {
     )
   }
 }
-
-ReactDOM.render(<Landing />, document.getElementById('content'))
