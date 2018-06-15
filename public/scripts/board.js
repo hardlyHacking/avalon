@@ -1,5 +1,3 @@
-const DOMAIN = 'localhost:5000'
-
 class PlayerList extends React.Component {
 
   constructor(props) {
@@ -22,7 +20,7 @@ class PlayerList extends React.Component {
       <button className={"btn btn-danger"}
               onClick={this.handleClick}
               type="button"
-      >Danger</button>
+      >Start Game</button>
     )
   }
 

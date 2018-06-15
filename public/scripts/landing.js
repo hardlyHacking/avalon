@@ -1,5 +1,3 @@
-const DOMAIN = 'localhost:5000'
-
 class Landing extends React.Component {
 
   constructor(props) {

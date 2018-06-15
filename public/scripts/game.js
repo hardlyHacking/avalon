@@ -1,5 +1,3 @@
-const DOMAIN = 'localhost:5000'
-
 class Game extends React.Component {
 
   constructor(props) {
