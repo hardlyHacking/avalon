@@ -56,7 +56,8 @@ class Board extends React.Component {
     }
 
     socket.on('player_join', function(data) {
-      const p = this.state.players.push(data['name'])
+      const p = this.state.players.slice()
+      p.push(data['name'])
       this.setState({ players: p })
     }.bind(this))
 
