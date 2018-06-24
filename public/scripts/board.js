@@ -1,24 +1,17 @@
-const NAMES = ['Mordred', 'Morgana', 'Percival', 'Oberon']
+const NAMES = ['Merlin', 'Mordred', 'Morgana', 'Percival', 'Oberon']
 
 class OptionalRoles extends React.Component {
 
   constructor(props) {
-    super(props);
-
-    this.state = {
-      hasPercival: false,
-      hasMorgana: false,
-      hasMordred: false,
-      hasOberon: false
-    }
-
-    this.renderCheckbox = this.renderCheckbox.bind(this);
+    super(props)
+    this.renderCheckbox = this.renderCheckbox.bind(this)
   }
 
   renderCheckbox(name) {
     return(
       <div key={name} className="custom-control custom-checkbox">
-        <input type="checkbox" className="custom-control-input" id={`check-${name}`} />
+        <input type="checkbox" className="custom-control-input"
+               onClick={() => this.props.onClick(name)}/>
         <label className="custom-control-label" htmlFor={`check-${name}`}>{name}</label>
       </div>
     )
@@ -28,7 +21,7 @@ class OptionalRoles extends React.Component {
     const checkBoxes = NAMES.map(n => this.renderCheckbox(n))
     return(
       <div>
-        <h2 className="">Optional Roles</h2>
+        <h2>Optional Roles</h2>
         {checkBoxes}
       </div>
     )
@@ -69,10 +62,15 @@ class Board extends React.Component {
   constructor(props) {
     super(props)
 
-    this.state = {
-      players: [],
-      isStarted: false
-    }
+    const state = {}
+    state[NAMES[0]] = false
+    state[NAMES[1]] = false
+    state[NAMES[2]] = false
+    state[NAMES[3]] = false
+    state[NAMES[4]] = false
+    state['players'] = []
+    state['isStarted'] = false
+    this.state = state
 
     socket.on('player_join', function(data) {
       const p = this.state.players.slice()
@@ -93,21 +91,37 @@ class Board extends React.Component {
       })
     }.bind(this))
 
+    socket.on('start_game_success', function(data) {
+      this.setState({ isStarted: true })
+    }.bind(this))
+
     socket.emit('room_status', {'room': this.props.room})
 
-    this.handleClick = this.handleClick.bind(this)
-    this.renderButton = this.renderButton.bind(this);
+    this.handleCheckboxClick = this.handleCheckboxClick.bind(this)
+    this.handleStartGameClick = this.handleStartGameClick.bind(this)
+    this.renderButton = this.renderButton.bind(this)
   }
 
-  handleClick() {
+  handleCheckboxClick(name) {
+    this.setState({ name: true })
+  }
+
+  handleStartGameClick() {
     this.setState({ isClick: true })
-    socket.emit('start_game', {'room': this.props.room})
+    let data = {}
+    data['room'] = this.props.room
+    data[NAMES[0]] = this.state[NAMES[0]]
+    data[NAMES[1]] = this.state[NAMES[1]]
+    data[NAMES[2]] = this.state[NAMES[2]]
+    data[NAMES[3]] = this.state[NAMES[3]]
+    data[NAMES[4]] = this.state[NAMES[4]]
+    socket.emit('start_game', data)
   }
 
   renderButton() {
     return(
       <button className={"btn btn-danger"}
-              onClick={this.handleClick}
+              onClick={this.handleStartGameClick}
               type="button"
               disabled={this.state.players.length < 5 || this.state.players.length > 10}
       >Start Game</button>
@@ -129,11 +143,11 @@ class Board extends React.Component {
                             room={this.props.room} />
               </td>
               <td style={halfWidth}>
-                <OptionalRoles />
+                <OptionalRoles onClick={this.handleCheckboxClick} />
               </td>
             </tr>
             <tr>
-              <td colspan="3">
+              <td colSpan="2">
                 {this.renderButton()}
               </td>
             </tr>
@@ -141,7 +155,7 @@ class Board extends React.Component {
         </table>
       )
     } else {
-      return null;
+      return(<Avalon roomId={this.state.roomId} />)
     }
   }
 }

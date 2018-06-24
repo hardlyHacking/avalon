@@ -115,7 +115,7 @@ class Landing extends React.Component {
 
   renderInvalidNameError() {
     if (!this.state.validName) {
-      return null;
+      return null
     }
     return(
       <div className={"alert alert-danger"} role="alert">

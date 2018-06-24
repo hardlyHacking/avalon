@@ -2,6 +2,13 @@ import bson.json_util
 import flask
 import flask_socketio
 import pymongo
+import random
+
+
+EVIL = ['Mordred, Morgana, Oberon', 'Minion of Mordred']
+GOOD = ['Merlin', 'Percival', 'Loyal Servant of Arthur']
+GENERIC_BAD, GENERIC_GOOD = 'Minion of Mordred', 'Loyal Servant of Arthur'
+SPECIAL_ROLES = ['Merlin', 'Mordred', 'Morgana', 'Percival', 'Oberon']
 
 
 app = flask.Flask(__name__, static_url_path='', static_folder='public')
@@ -11,7 +18,7 @@ client = pymongo.MongoClient()
 db = client.test_database
 
 
-# In-memory mapping of socket-id's to user names and rooms
+# In-memory mapping of socket-id's to user SPECIAL_ROLES and rooms
 # Used to determine which sockets belong to which named users
 # and broadcast on socket disconnect events
 NO_AUTH = 'unnamed'
@@ -122,12 +129,9 @@ def start_game(data):
   room = db.rooms.find_one({'room_id': data['room']})
   if not room is None and not room['is_started'] \
         and len(room['players']) > 4 and len(room['players']) < 11:
-    db.rooms.find_one_and_update({'room_id': data['room']},
-      {
-        '$set': {
-          'is_started': True
-        }
-      })
+    room = _assign_roles(room, data)
+    db.rooms.replace_one({'room_id': data['room']}, room)
+
     flask_socketio.emit('start_game_success',
         {'room': bson.json_util.dumps(room)}, room=data['room'])
   else:
@@ -135,10 +139,54 @@ def start_game(data):
         {'msg': 'Could not start game: ' + data['room']}, room=data['room'])
 
 
+def _assign_roles(room, data):
+    room['is_started'] = True
+    players = room['players']
+    if num_players < 7:
+        total_bad = 2
+    elif num_players < 10:
+        total_bad = 3
+    elif num_players == 10:
+        total_bad = 4
+    total_good = num_players - total_bad
+
+    # Filter in all selected optional roles
+    num_players, num_good, num_bad = len(players), 0, 0
+    optional_roles = set(SPECIAL_ROLES)
+    [optional_roles.remove(n) for n in SPECIAL_ROLES if not data[n]]
+
+    # Randomly assign optional roles to players
+    mapping = {}
+    for role in optional_roles:
+        p = random.choice(players)
+        mapping[p] = role
+        players.remove(p)
+        if role == 'Mordred' or role == 'Morgana':
+            num_bad += 1
+        else:
+            num_good += 1
+
+    # Randomly assign the ordinary roles to remaining players
+    # (loyal servant of arthur and minion or mordred)
+    while num_bad < total_bad:
+        p = random.choice(players)
+        mapping[p] = GENERIC_BAD
+        players.remove(p)
+    while num_good < total_good:
+        p = random.choice(players)
+        mapping[p] = GENERIC_GOOD
+        players.remove(p)
+
+    # Return modified object
+    room['roles'] = mapping
+    return room
+
+
 def _create_game(room, name):
   ''' Create a new game object. '''
   return {
     'room_id': room,
+    'roles': {},
     'players': [name],
     'is_started': False,
     'is_over': False,
