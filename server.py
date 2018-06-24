@@ -93,7 +93,7 @@ def create_game(data):
 def join_game(data):
   ''' A user joined a game. '''
   room = db.rooms.find_one({'room_id': data['room']})
-  if room is None or room['is_started']:
+  if room is None or (room['is_started'] and not data['name'] in room['roles']):
     flask_socketio.emit('join_room_failure',
         {'msg': 'Could not join room ' + data['room']})
   else:
