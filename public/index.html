@@ -29,7 +29,9 @@
     <script type="text/javascript" charset="utf-8">
       let socket = io.connect('http://' + document.domain + ':' + location.port);
       socket.on('connect', function() {
-        socket.emit('connect_event', {data: 'Client connected!'});
+        socket.on('disconnect', function() {
+          socket.emit('disconnect_event', {data: 'Client disconnected!'})
+        });
       });
     </script>
     <script type="text/babel" src="scripts/landing.js"></script>

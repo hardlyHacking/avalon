@@ -61,6 +61,11 @@ class Board extends React.Component {
       this.setState({ players: p })
     }.bind(this))
 
+    socket.on('player_leave', function(data) {
+      const p = this.state.players.filter(e => e !== data['name'])
+      this.setState({ players: p })
+    }.bind(this))
+
     socket.on('room_status', function(data) {
       const room = JSON.parse(data.room)
       this.setState({
