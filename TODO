@@ -1,0 +1,10 @@
+1. Sync optional role checkbox state w/ sockets
+2. Freeze all gameplay whenever someone leaves a room when the game has started
+  - Show proper bootstrap alert (error)
+3. Resume all gameplay when that person returns
+  - Show proper bootstrap alert (success)
+4. Fix join room race condition where occasionally it shows create game instead of join
+  - Probably lower the typeahead timeout and disable the name field until socket response
+5. Shuffle player order randomly when starting game
+6. Room_status should track the role of the requester and only give the proper roles back
+7. Get rid of react js warnings
