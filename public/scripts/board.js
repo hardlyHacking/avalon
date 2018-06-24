@@ -1,27 +1,47 @@
+const NAMES = ['Mordred', 'Morgana', 'Percival', 'Oberon']
+
+class OptionalRoles extends React.Component {
+
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      hasPercival: false,
+      hasMorgana: false,
+      hasMordred: false,
+      hasOberon: false
+    }
+
+    this.renderCheckbox = this.renderCheckbox.bind(this);
+  }
+
+  renderCheckbox(name) {
+    return(
+      <div key={name} className="custom-control custom-checkbox">
+        <input type="checkbox" className="custom-control-input" id={`check-${name}`} />
+        <label className="custom-control-label" htmlFor={`check-${name}`}>{name}</label>
+      </div>
+    )
+  }
+
+  render() {
+    const checkBoxes = NAMES.map(n => this.renderCheckbox(n))
+    return(
+      <div>
+        <h2 className="">Optional Roles</h2>
+        {checkBoxes}
+      </div>
+    )
+  }
+}
+
 class PlayerList extends React.Component {
 
   constructor(props) {
     super(props)
 
-    this.state = { isClicked: false }
-
-    this.handleClick = this.handleClick.bind(this)
-    this.renderButton = this.renderButton.bind(this)
+    this.state = { isClicked: false, players: [] }
     this.renderList = this.renderList.bind(this)
-  }
-
-  handleClick() {
-    this.setState({ isClick: true })
-    socket.emit('start_game', {'room': this.props.room})
-  }
-
-  renderButton() {
-    return(
-      <button className={"btn btn-danger"}
-              onClick={this.handleClick}
-              type="button"
-      >Start Game</button>
-    )
   }
 
   renderList() {
@@ -39,7 +59,6 @@ class PlayerList extends React.Component {
       <div>
         <h2>Active Players</h2>
         {this.renderList()}
-        {this.renderButton()}
       </div>
     )
   }
@@ -75,12 +94,52 @@ class Board extends React.Component {
     }.bind(this))
 
     socket.emit('room_status', {'room': this.props.room})
+
+    this.handleClick = this.handleClick.bind(this)
+    this.renderButton = this.renderButton.bind(this);
+  }
+
+  handleClick() {
+    this.setState({ isClick: true })
+    socket.emit('start_game', {'room': this.props.room})
+  }
+
+  renderButton() {
+    return(
+      <button className={"btn btn-danger"}
+              onClick={this.handleClick}
+              type="button"
+              disabled={this.state.players.length < 5 || this.state.players.length > 10}
+      >Start Game</button>
+    )
   }
 
   render() {
     if (!this.state.isStarted) {
-      return(<PlayerList players={this.state.players}
-                         room={this.props.room} />)
+      const halfWidth = {
+        width: "10%"
+      }
+
+      return(
+        <table className="table table-sm">
+          <tbody>
+            <tr>
+              <td style={halfWidth}>
+                <PlayerList players={this.state.players}
+                            room={this.props.room} />
+              </td>
+              <td style={halfWidth}>
+                <OptionalRoles />
+              </td>
+            </tr>
+            <tr>
+              <td colspan="3">
+                {this.renderButton()}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      )
     } else {
       return null;
     }

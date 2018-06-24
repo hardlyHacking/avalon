@@ -120,7 +120,8 @@ def room_status(data):
 def start_game(data):
   ''' All inclined users have joined; start the game. '''
   room = db.rooms.find_one({'room_id': data['room']})
-  if not room is None and not room['is_started']:
+  if not room is None and not room['is_started'] \
+        and len(room['players']) > 4 and len(room['players']) < 11:
     db.rooms.find_one_and_update({'room_id': data['room']},
       {
         '$set': {
