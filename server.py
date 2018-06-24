@@ -5,10 +5,11 @@ import pymongo
 import random
 
 
+ALWAYS_PRESENT = ['Assassin', 'Merlin']
 EVIL = ['Mordred, Morgana, Oberon', 'Minion of Mordred']
 GOOD = ['Merlin', 'Percival', 'Loyal Servant of Arthur']
 GENERIC_BAD, GENERIC_GOOD = 'Minion of Mordred', 'Loyal Servant of Arthur'
-SPECIAL_ROLES = ['Merlin', 'Mordred', 'Morgana', 'Percival', 'Oberon']
+OPTIONAL_ROLES = ['Mordred', 'Morgana', 'Percival', 'Oberon']
 
 
 app = flask.Flask(__name__, static_url_path='', static_folder='public')
@@ -18,7 +19,7 @@ client = pymongo.MongoClient()
 db = client.test_database
 
 
-# In-memory mapping of socket-id's to user SPECIAL_ROLES and rooms
+# In-memory mapping of socket-id's to user OPTIONAL_ROLES and rooms
 # Used to determine which sockets belong to which named users
 # and broadcast on socket disconnect events
 NO_AUTH = 'unnamed'
@@ -142,6 +143,7 @@ def start_game(data):
 def _assign_roles(room, data):
     room['is_started'] = True
     players = room['players']
+    num_players = len(players)
     if num_players < 7:
         total_bad = 2
     elif num_players < 10:
@@ -151,9 +153,9 @@ def _assign_roles(room, data):
     total_good = num_players - total_bad
 
     # Filter in all selected optional roles
-    num_players, num_good, num_bad = len(players), 0, 0
-    optional_roles = set(SPECIAL_ROLES)
-    [optional_roles.remove(n) for n in SPECIAL_ROLES if not data[n]]
+    num_good, num_bad = 0, 0
+    optional_roles = set(OPTIONAL_ROLES)
+    [optional_roles.remove(n) for n in OPTIONAL_ROLES if not data[n]]
 
     # Randomly assign optional roles to players
     mapping = {}
@@ -165,6 +167,12 @@ def _assign_roles(room, data):
             num_bad += 1
         else:
             num_good += 1
+    for role in ALWAYS_PRESENT:
+        p = random.choice(players)
+        mapping[p] = role
+        players.remove(p)
+    num_bad += 1
+    num_good += 1
 
     # Randomly assign the ordinary roles to remaining players
     # (loyal servant of arthur and minion or mordred)
@@ -172,13 +180,17 @@ def _assign_roles(room, data):
         p = random.choice(players)
         mapping[p] = GENERIC_BAD
         players.remove(p)
+        num_bad += 1
     while num_good < total_good:
         p = random.choice(players)
         mapping[p] = GENERIC_GOOD
         players.remove(p)
+        num_good += 1
 
     # Return modified object
     room['roles'] = mapping
+    room['players'] = [k for k in mapping]
+    print('room: {}'.format(room))
     return room
 
 

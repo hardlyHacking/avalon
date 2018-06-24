@@ -1,4 +1,4 @@
-const NAMES = ['Merlin', 'Mordred', 'Morgana', 'Percival', 'Oberon']
+const NAMES = ['Mordred', 'Morgana', 'Percival', 'Oberon']
 
 class OptionalRoles extends React.Component {
 
@@ -67,7 +67,6 @@ class Board extends React.Component {
     state[NAMES[1]] = false
     state[NAMES[2]] = false
     state[NAMES[3]] = false
-    state[NAMES[4]] = false
     state['players'] = []
     state['isStarted'] = false
     this.state = state
@@ -114,7 +113,6 @@ class Board extends React.Component {
     data[NAMES[1]] = this.state[NAMES[1]]
     data[NAMES[2]] = this.state[NAMES[2]]
     data[NAMES[3]] = this.state[NAMES[3]]
-    data[NAMES[4]] = this.state[NAMES[4]]
     socket.emit('start_game', data)
   }
 
