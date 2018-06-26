@@ -137,8 +137,7 @@ class Board extends React.Component {
           <tbody>
             <tr>
               <td style={halfWidth}>
-                <PlayerList players={this.state.players}
-                            room={this.props.room} />
+                <PlayerList players={this.state.players} />
               </td>
               <td style={halfWidth}>
                 <OptionalRoles onClick={this.handleCheckboxClick} />
@@ -153,7 +152,7 @@ class Board extends React.Component {
         </table>
       )
     } else {
-      return(<Avalon roomId={this.state.roomId} />)
+      return(<Avalon roomId={this.props.room} />)
     }
   }
 }

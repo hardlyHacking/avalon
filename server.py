@@ -189,8 +189,10 @@ def _assign_roles(room, data):
 
     # Return modified object
     room['roles'] = mapping
-    room['players'] = [k for k in mapping]
-    print('room: {}'.format(room))
+    shuffled_players = [k for k in mapping]
+    random.shuffle(shuffled_players)
+    room['players'] = shuffled_players
+    room['turn'] = 0
     return room
 
 
