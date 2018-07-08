@@ -8,8 +8,8 @@ class TurnLabel extends React.Component {
     const name = this.props.turn === 0 ? this.props.players[0] :
         this.props.players[this.props.players.length % this.props.turn]
     const mission = this.props.isMission ? `Mission in progress` :
-      (this.props.isProposingTeam ? `${name} proposing team` :
-        `Vote on ${name}'s proposal`)
+      (this.props.isProposingTeam ? `Waiting for ${name}'s proposal` :
+        (this.props.isVotingProposal ? `Vote on ${name}'s proposal` : null))
     return(
       <div>
         <h2>{`${name}'s Turn`}</h2>
@@ -78,10 +78,9 @@ class ActionButton extends React.Component {
   render() {
     const room = this.props.room
 
-    if (room.is_proposing_team) {
-      const isYourTurn = room.current_player === room.players[room.turn]
-      const enoughSelected = this.props.selected === room.max_count[room.turn]
-      const btnDisabled = !(isYourTurn && enoughSelected)
+    const isYourTurn = room.current_player === room.players[room.turn]
+    if (room.is_proposing_team && isYourTurn) {
+      const btnDisabled = this.props.selected !== room.max_count[room.turn]
       return(
         <div>
           <button type="button"
@@ -146,7 +145,11 @@ class Avalon extends React.Component {
 
     return(
       <div>
-        <TurnLabel players={this.state.room.players} turn={this.state.room.turn} />
+        <TurnLabel players={this.state.room.players}
+                   turn={this.state.room.turn}
+                   isProposingTeam={this.state.room.is_proposing_team}
+                   isMission={this.state.room.is_mission}
+                   isVotingProposal={this.state.room.is_voting_proposal} />
         <PlayerCircle players={this.state.room.players}
                       onClick={this.onPlayerClick}
                       selected={this.state.selected}
