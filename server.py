@@ -119,6 +119,8 @@ def join_game(data):
 def room_status(data):
   ''' General endpoint to fetch game state. '''
   room = db.rooms.find_one({'room_id': data['room']})
+  name = CLIENTS[flask.request.sid]['name']
+  room['current_player'] = name
   if room is None:
     flask_socketio.emit('room_status_error', {'msg': 'Invalid room'})
   else:

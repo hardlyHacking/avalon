@@ -69,6 +69,40 @@ class PlayerCircle extends React.Component {
   }
 }
 
+class ActionButton extends React.Component {
+
+  constructor(props) {
+    super(props)
+  }
+
+  render() {
+    const room = this.props.room
+
+    if (room.is_proposing_team) {
+      const isYourTurn = room.current_player === room.players[room.turn]
+      const enoughSelected = this.props.selected === room.max_count[room.turn]
+      const btnDisabled = !(isYourTurn && enoughSelected)
+      return(
+        <div>
+          <button type="button"
+                  className="btn btn-secondary"
+                  disabled={btnDisabled}
+          >Propose</button>
+        </div>
+      )
+    } else if (room.is_mission) {
+      return(
+        <div>
+          <button type="button" className="btn btn-success">Success</button>
+          <button type="button" className="btn btn-danger">Fail</button>
+        </div>
+      )
+    }
+
+    return null
+  }
+}
+
 class Avalon extends React.Component {
 
   constructor(props) {
@@ -118,6 +152,8 @@ class Avalon extends React.Component {
                       selected={this.state.selected}
                       turn={this.state.room.turn ===0 ? 0 :
                             this.state.room.turn % this.state.room.players.length} />
+        <ActionButton room={this.state.room}
+                      selected={this.state.selected.size} />
       </div>
     )
   }
