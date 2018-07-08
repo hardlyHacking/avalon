@@ -162,7 +162,7 @@ def propose_team(data):
         })
 
         flask_socketio.emit('propose_team_success',
-            {'propsal': data['proposal']}, room=data['room'])
+            {'proposal': data['proposal']}, room=data['room'])
     else:
         flask_socketio.emit('propose_team_failure')
 
@@ -186,6 +186,9 @@ def vote_proposal(data):
                 'is_proposal_ack': done,
             },
         })
+
+        flask_socketio.emit('vote_proposal_success',
+            {'vote': data['vote']}, room=data['room'])
     else:
         flask_socketio.emit('vote_proposal_failure')
 

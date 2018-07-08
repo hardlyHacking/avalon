@@ -26,11 +26,11 @@ class Player extends React.Component {
   }
 
   render() {
-    const wrapper = this.props.proposed ?
+    const icon = this.props.proposed ?
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
              viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-             class="feather feather-users">
+             strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+             className="feather feather-users">
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
           <circle cx="9" cy="7" r="4"></circle>
           <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
@@ -43,9 +43,20 @@ class Player extends React.Component {
           <path d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"/>
         </svg>
       </div> : null)
+    const waiting = this.props.waiting ?
+      <div>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+             viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+             className="feather feather-watch">
+          <circle cx="12" cy="12" r="7"></circle>
+          <polyline points="12 9 12 12 13.5 13.5"></polyline>
+          <path d="M16.51 17.35l-.35 3.83a2 2 0 0 1-2 1.82H9.83a2 2 0 0 1-2-1.82l-.35-3.83m.01-10.7l.35-3.83A2 2 0 0 1 9.83 1h4.35a2 2 0 0 1 2 1.82l.35 3.83"></path>
+        </svg>
+      </div> : null
     return(
       <div>
-        {this.props.name} {wrapper}
+        {this.props.name} {icon} {waiting}
       </div>
     )
   }
@@ -58,14 +69,24 @@ class PlayerCircle extends React.Component {
   }
 
   render() {
-    const playerList = this.props.players.map((p, index) => {
-      const c = index === this.props.turn ? "list-group-item active" : "list-group-item"
+    const turn = this.props.room.turn === 0 ? 0 :
+        this.props.room.turn % this.props.room.players.length
+    const proposalAccept = new Set(this.props.room.proposal_accept)
+    const proposalReject = new Set(this.props.room.proposal_reject)
+    const proposed = new Set(this.props.room.proposal)
+    const name = this.props.room.players[turn]
+
+    const playerList = this.props.room.players.map((p, index) => {
+      const c = index === turn ? "list-group-item active" : "list-group-item"
+      const isWaiting = this.props.room.is_proposing_team ?
+        name === p : !(proposalAccept.has(p) || proposalReject.has(p))
       return <li key={p}
                  className={c}
                  onClick={() => this.props.onClick(p)}>
                <Player name={p}
+                       waiting={isWaiting}
                        selected={this.props.selected.has(p)}
-                       proposed={this.props.proposed.has(p)} />
+                       proposed={proposed.has(p)} />
              </li>
     })
 
@@ -179,6 +200,10 @@ class Avalon extends React.Component {
       socket.emit('room_status', {'room': this.props.roomId})
     }.bind(this))
 
+    socket.on('vote_proposal_success', function(data) {
+      socket.emit('room_status', {'room': this.props.roomId})
+    }.bind(this))
+
     this.onPlayerClick = this.onPlayerClick.bind(this)
   }
 
@@ -218,12 +243,9 @@ class Avalon extends React.Component {
                    isProposingTeam={this.state.room.is_proposing_team}
                    isMission={this.state.room.is_mission}
                    isVotingProposal={this.state.room.is_voting_proposal} />
-        <PlayerCircle players={this.state.room.players}
-                      onClick={this.onPlayerClick}
+        <PlayerCircle onClick={this.onPlayerClick}
                       selected={this.state.selected}
-                      proposed={new Set(this.state.room.proposal)}
-                      turn={this.state.room.turn ===0 ? 0 :
-                            this.state.room.turn % this.state.room.players.length} />
+                      room={this.state.room} />
         <ActionButton room={this.state.room}
                       roomId={this.props.roomId}
                       selected={this.state.selected} />
