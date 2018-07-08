@@ -19,6 +19,30 @@ class TurnLabel extends React.Component {
   }
 }
 
+class Player extends React.Component {
+
+  constructor(props) {
+    super(props)
+  }
+
+  render() {
+    const wrapper = this.props.selected ?
+      <div>
+        <svg xmlns="http://www.w3.org/2000/svg"
+             width="24"
+             height="24"
+             viewBox="0 0 24 24"
+        ><path d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"/>
+        </svg>
+      </div> : null
+    return(
+      <div>
+        {this.props.name} {wrapper}
+      </div>
+    )
+  }
+}
+
 class PlayerCircle extends React.Component {
 
   constructor(props) {
@@ -28,7 +52,10 @@ class PlayerCircle extends React.Component {
   render() {
     const playerList = this.props.players.map((p, index) => {
       const c = index === this.turn ? "list-group-item active" : "list-group-item"
-      return <li key={p} className={c} onClick={() => this.props.onClick(p)}>{p}</li>
+      return <li key={p}
+                 className={c}
+                 onClick={() => this.props.onClick(p)}
+             ><Player name={p} selected={this.props.selected.has(p)} /></li>
     })
 
     return(
@@ -47,7 +74,7 @@ class Avalon extends React.Component {
   constructor(props) {
     super(props)
 
-    this.state = { fetched: false, room: {}, selected: {} }
+    this.state = { fetched: false, room: {}, selected: new Set() }
 
     socket.emit('room_status', {'room': this.props.roomId})
 
@@ -59,10 +86,18 @@ class Avalon extends React.Component {
   }
 
   onPlayerClick(player) {
-    if (Object.keys(this.state.selected).length < this.state.room.maxCount) {
-      const choice = player in this.state.selected && this.state.selected[player]
-      const newSelection = Object.assign({}, this.state.selected, {player: choice})
-      this.setState({ selected: newSelection })
+    if (this.state.selected.has(player)) {
+      this.setState({
+        selected: new Set([...this.state.selected].filter(x => x !== player))
+      })
+    } else {
+      const selected = this.state.selected.size
+      const allowed = this.state.room.max_count[this.state.room.turn]
+      if (selected < allowed) {
+        this.setState({
+          selected: new Set([...this.state.selected].concat(player))
+        })
+      }
     }
   }
 
