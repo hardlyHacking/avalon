@@ -147,9 +147,11 @@ def start_game(data):
 def propose_team(data):
     ''' Propose a team. '''
     room = db.rooms.find_one({'room_id': data['room']})
-    name = CLIENTS[flask.request.sid]['name']
+
     if not room is None and room['is_started'] and \
-            room['players'][room['turn'] % len(room['players'])] == name:
+            flask.request.sid in CLIENTS and \
+            room['players'][room['turn'] % len(room['players'])] \
+            == CLIENTS[flask.request.sid]['name']:
         db.rooms.find_one_and_update({'room_id': data['room']}, {
             '$set': {
                 'proposal': data['proposal'],
@@ -162,6 +164,29 @@ def propose_team(data):
             {'propsal': data['proposal']}, room=data['room'])
     else:
         flask_socketio.emit('propose_team_failure')
+
+
+@socketio.on('vote_proposal')
+def vote_proposal(data):
+    ''' Vote on a proposed team. '''
+    room = db.rooms.find_one({'room_id': data['room']})
+    if not room is None and flask.request.sid in CLIENTS and \
+            not CLIENTS[flask.request.sid]['name'] in room['proposal_accept'] \
+            and not CLIENTS[flask.request.sid]['name'] in room['proposal_reject']:
+        key = 'proposal_accept' if data['vote'] else 'proposal_reject'
+        done = len(room['proposal_accept']) + len(room['proposal_reject']) == len(room['players']) - 1
+        name = CLIENTS[flask.request.sid]['name']
+        db.rooms.find_one_and_update({'room_id': data['room']}, {
+            '$push': {
+                key: name,
+                'proposal_ack': name,
+            },
+            '$set': {
+                'is_proposal_ack': done,
+            },
+        })
+    else:
+        flask_socketio.emit('vote_proposal_failure')
 
 
 def _assign_roles(room, data):
@@ -230,8 +255,12 @@ def _create_game(room, name):
     'roles': {},
     'players': [name],
     'proposal': [],
+    'proposal_ack': [],
+    'proposal_accept': [],
+    'proposal_reject': [],
     'is_mission': False,
     'is_proposing_team': False,
+    'is_proposal_ack': False,
     'is_voting_proposal': False,
     'is_started': False,
     'is_over': False,

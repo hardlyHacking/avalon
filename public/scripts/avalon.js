@@ -26,15 +26,23 @@ class Player extends React.Component {
   }
 
   render() {
-    const wrapper = this.props.selected ?
+    const wrapper = this.props.proposed ?
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+             viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+             class="feather feather-users">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+      : (this.props.selected ?
       <div>
         <svg xmlns="http://www.w3.org/2000/svg"
-             width="24"
-             height="24"
-             viewBox="0 0 24 24"
-        ><path d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"/>
+             width="24" height="24" viewBox="0 0 24 24">
+          <path d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"/>
         </svg>
-      </div> : null
+      </div> : null)
     return(
       <div>
         {this.props.name} {wrapper}
@@ -54,8 +62,11 @@ class PlayerCircle extends React.Component {
       const c = index === this.props.turn ? "list-group-item active" : "list-group-item"
       return <li key={p}
                  className={c}
-                 onClick={() => this.props.onClick(p)}
-             ><Player name={p} selected={this.props.selected.has(p)} /></li>
+                 onClick={() => this.props.onClick(p)}>
+               <Player name={p}
+                       selected={this.props.selected.has(p)}
+                       proposed={this.props.proposed.has(p)} />
+             </li>
     })
 
     return(
@@ -74,13 +85,26 @@ class ActionButton extends React.Component {
   constructor(props) {
     super(props)
 
+    this.ackProposal = this.ackProposal.bind(this)
     this.proposeTeam = this.proposeTeam.bind(this)
+    this.voteProposal = this.voteProposal.bind(this)
+  }
+
+  ackProposal() {
+    socket.emit('ack_proposal', { 'room': this.props.roomId })
   }
 
   proposeTeam() {
     socket.emit('propose_team', {
       'room': this.props.roomId,
       'proposal': [...this.props.selected]
+    })
+  }
+
+  voteProposal(vote) {
+    socket.emit('vote_proposal', {
+      'room': this.props.roomId,
+      'vote': vote
     })
   }
 
@@ -97,6 +121,28 @@ class ActionButton extends React.Component {
                   disabled={btnDisabled}
                   onClick={this.proposeTeam}
           >Propose</button>
+        </div>
+      )
+    } else if (room.is_voting_proposal) {
+      return(
+        <div>
+          <button type="button"
+                  className="btn btn-success"
+                  onClick={() => this.voteProposal(true)}
+          >Accept</button>
+          <button type="button"
+                  className="btn btn-danger"
+                  onClick={() => this.voteProposal(false)}
+          >Reject</button>
+        </div>
+      )
+    } else if (room.is_proposal_ack) {
+      return(
+        <div>
+          <button type="button"
+                  className="btn btn-secondary"
+                  onClick={this.ackProposal}
+          >Ok</button>
         </div>
       )
     } else if (room.is_mission) {
@@ -137,7 +183,8 @@ class Avalon extends React.Component {
   }
 
   onPlayerClick(player) {
-    if (this.state.room.is_proposing_team &&
+    const room = this.state.room
+    if (room.is_proposing_team &&
         room.current_player === room.players[room.turn]) {
       if (this.state.selected.has(player)) {
         this.setState({
@@ -145,7 +192,7 @@ class Avalon extends React.Component {
         })
       } else {
         const selected = this.state.selected.size
-        const allowed = this.state.room.max_count[this.state.room.turn]
+        const allowed = room.max_count[room.turn]
         if (selected < allowed) {
           this.setState({
             selected: new Set([...this.state.selected].concat(player))
@@ -174,6 +221,7 @@ class Avalon extends React.Component {
         <PlayerCircle players={this.state.room.players}
                       onClick={this.onPlayerClick}
                       selected={this.state.selected}
+                      proposed={new Set(this.state.room.proposal)}
                       turn={this.state.room.turn ===0 ? 0 :
                             this.state.room.turn % this.state.room.players.length} />
         <ActionButton room={this.state.room}
