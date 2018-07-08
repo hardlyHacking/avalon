@@ -98,13 +98,14 @@ def join_game(data):
     flask_socketio.emit('join_room_failure',
         {'msg': 'Could not join room ' + data['room']})
   else:
-    # Update DB
-    db.rooms.find_one_and_update({'room_id': data['room']},
-      {
-        '$push': {
-          'players': data['name']
-        }
-      })
+    if not room['is_started']:
+      # Update DB
+      db.rooms.find_one_and_update({'room_id': data['room']},
+        {
+          '$push': {
+            'players': data['name']
+          }
+        })
 
     # Update in-memory socket mapping
     _join_room(flask.request.sid, data['name'], data['room'])
