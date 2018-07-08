@@ -152,7 +152,7 @@ class Board extends React.Component {
         </table>
       )
     } else {
-      return(<Avalon roomId={this.props.room} />)
+      return(<Avalon roomId={this.props.room} name={this.props.name} />)
     }
   }
 }

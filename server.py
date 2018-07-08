@@ -82,7 +82,8 @@ def create_game(data):
     # Join socket user to room
     _join_room(flask.request.sid, data['name'], data['room'])
 
-    flask_socketio.emit('join_room_success', {'room': data['room']})
+    flask_socketio.emit('join_room_success',
+        {'room': data['room'], 'name': data['name']})
     flask_socketio.join_room(data['room'])
   # Cannot create a room that already exists
   else:
@@ -188,11 +189,14 @@ def _assign_roles(room, data):
         num_good += 1
 
     # Return modified object
+    room['_is_double_fail'] = False
     room['roles'] = mapping
     shuffled_players = [k for k in mapping]
     random.shuffle(shuffled_players)
     room['players'] = shuffled_players
-    room['turn'] = 0
+    room['is_proposing_team'] = True
+    room['max_count'] = [_get_mission_count(n, len(shuffled_players))
+            for n in range(1, len(shuffled_players) + 1)]
     return room
 
 
@@ -202,9 +206,49 @@ def _create_game(room, name):
     'room_id': room,
     'roles': {},
     'players': [name],
+    'is_mission': False,
+    'is_proposing_team': False,
+    'is_voting_proposal': False,
     'is_started': False,
     'is_over': False,
+    'turn': 0,
+    'mission': 0,
+    'missions': [0, 0, 0, 0, 0],
   }
+
+
+def _get_mission_count(num_mission, num_players):
+    ''' Determine the number of players for a particular mission. '''
+    if num_mission == 0:
+        return 2 if num_players < 8 else 3
+    elif num_mission == 1:
+        return 3 if num_players < 8 else 4
+    elif num_mission == 3:
+        if num_players == 5:
+            return 2
+        elif num_players == 6 or num_players > 7:
+            return 4
+        else:
+            return 3
+    elif num_mission == 4:
+        if num_players < 7:
+            return 3
+        elif num_players == 7:
+            return 4
+        else:
+            return 5
+    elif num_mission == 5:
+        if num_players == 5:
+            return 3
+        elif num_players < 8:
+            return 4
+        else:
+            return 5
+
+
+def _is_double_fail(num_mission, num_players):
+    ''' Determine whether a particular mission requires 2 no votes to fail. '''
+    return num_mission == 4 and num_players > 6
 
 
 def _join_room(sid, name, room):
