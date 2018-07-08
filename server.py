@@ -143,6 +143,27 @@ def start_game(data):
         {'msg': 'Could not start game: ' + data['room']}, room=data['room'])
 
 
+@socketio.on('propose_team')
+def propose_team(data):
+    ''' Propose a team. '''
+    room = db.rooms.find_one({'room_id': data['room']})
+    name = CLIENTS[flask.request.sid]['name']
+    if not room is None and room['is_started'] and \
+            room['players'][room['turn'] % len(room['players'])] == name:
+        db.rooms.find_one_and_update({'room_id': data['room']}, {
+            '$set': {
+                'proposal': data['proposal'],
+                'is_voting_proposal': True,
+                'is_proposing_team': False,
+            }
+        })
+
+        flask_socketio.emit('propose_team_success',
+            {'propsal': data['proposal']}, room=data['room'])
+    else:
+        flask_socketio.emit('propose_team_failure')
+
+
 def _assign_roles(room, data):
     room['is_started'] = True
     players = room['players']
@@ -208,6 +229,7 @@ def _create_game(room, name):
     'room_id': room,
     'roles': {},
     'players': [name],
+    'proposal': [],
     'is_mission': False,
     'is_proposing_team': False,
     'is_voting_proposal': False,

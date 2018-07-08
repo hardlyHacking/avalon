@@ -73,6 +73,15 @@ class ActionButton extends React.Component {
 
   constructor(props) {
     super(props)
+
+    this.proposeTeam = this.proposeTeam.bind(this)
+  }
+
+  proposeTeam() {
+    socket.emit('propose_team', {
+      'room': this.props.roomId,
+      'proposal': [...this.props.selected]
+    })
   }
 
   render() {
@@ -80,12 +89,13 @@ class ActionButton extends React.Component {
 
     const isYourTurn = room.current_player === room.players[room.turn]
     if (room.is_proposing_team && isYourTurn) {
-      const btnDisabled = this.props.selected !== room.max_count[room.turn]
+      const btnDisabled = this.props.selected.size !== room.max_count[room.turn]
       return(
         <div>
           <button type="button"
                   className="btn btn-secondary"
                   disabled={btnDisabled}
+                  onClick={this.proposeTeam}
           >Propose</button>
         </div>
       )
@@ -115,21 +125,32 @@ class Avalon extends React.Component {
       this.setState({ room: JSON.parse(data['room']), fetched: true })
     }.bind(this))
 
+    socket.on('propose_team_failure', function(data) {
+      alert('Invalid proposal')
+    })
+
+    socket.on('propose_team_success', function(data) {
+      socket.emit('room_status', {'room': this.props.roomId})
+    }.bind(this))
+
     this.onPlayerClick = this.onPlayerClick.bind(this)
   }
 
   onPlayerClick(player) {
-    if (this.state.selected.has(player)) {
-      this.setState({
-        selected: new Set([...this.state.selected].filter(x => x !== player))
-      })
-    } else {
-      const selected = this.state.selected.size
-      const allowed = this.state.room.max_count[this.state.room.turn]
-      if (selected < allowed) {
+    if (this.state.room.is_proposing_team &&
+        room.current_player === room.players[room.turn]) {
+      if (this.state.selected.has(player)) {
         this.setState({
-          selected: new Set([...this.state.selected].concat(player))
+          selected: new Set([...this.state.selected].filter(x => x !== player))
         })
+      } else {
+        const selected = this.state.selected.size
+        const allowed = this.state.room.max_count[this.state.room.turn]
+        if (selected < allowed) {
+          this.setState({
+            selected: new Set([...this.state.selected].concat(player))
+          })
+        }
       }
     }
   }
@@ -156,7 +177,8 @@ class Avalon extends React.Component {
                       turn={this.state.room.turn ===0 ? 0 :
                             this.state.room.turn % this.state.room.players.length} />
         <ActionButton room={this.state.room}
-                      selected={this.state.selected.size} />
+                      roomId={this.props.roomId}
+                      selected={this.state.selected} />
       </div>
     )
   }
