@@ -51,7 +51,7 @@ class PlayerCircle extends React.Component {
 
   render() {
     const playerList = this.props.players.map((p, index) => {
-      const c = index === this.turn ? "list-group-item active" : "list-group-item"
+      const c = index === this.props.turn ? "list-group-item active" : "list-group-item"
       return <li key={p}
                  className={c}
                  onClick={() => this.props.onClick(p)}
@@ -116,7 +116,8 @@ class Avalon extends React.Component {
         <PlayerCircle players={this.state.room.players}
                       onClick={this.onPlayerClick}
                       selected={this.state.selected}
-                      turn={this.state.room.turn % this.state.room.players.length} />
+                      turn={this.state.room.turn ===0 ? 0 :
+                            this.state.room.turn % this.state.room.players.length} />
       </div>
     )
   }
