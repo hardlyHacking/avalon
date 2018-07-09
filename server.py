@@ -168,6 +168,70 @@ def propose_team(data):
         flask_socketio.emit('propose_team_failure')
 
 
+@socketio.on('ack_proposal')
+def ack_proposal(data):
+    ''' Acknowledge the proposal. '''
+    room = db.rooms.find_one({'room_id': data['room']})
+    if not room is None and flask.request.sid in CLIENTS and \
+            not CLIENTS[flask.request.sid]['name'] in room['proposal_ack']:
+        done = len(room['proposal_ack']) == len(room['players']) - 1
+        accepted = len(room['proposal_accept']) > len(room['proposal_reject'])
+
+        # All have ack-ed - proposal accepted, move onto mission phase
+        if done and accepted:
+            db.rooms.find_one_and_update({'room_id': data['room']}, {
+                '$set': {
+                    'is_proposal_ack': False,
+                    'is_mission': True,
+                    'proposal_ack': [],
+                    'proposal_accept': [],
+                    'proposal_reject': [],
+                },
+            })
+        # All have ack-ed - proposal rejected
+        elif done:
+            # Increment rejection count and move to next person
+            if room['proposal_rejection_count'] < 5:
+                db.rooms.find_one_and_update({'room_id': data['room']}, {
+                    '$set': {
+                        'is_proposal_ack': False,
+                        'is_proposing_team': True,
+                        'proposal_ack': [],
+                        'proposal_accept': [],
+                        'proposal_reject': [],
+                        'proposal': [],
+                    },
+                    '$inc': {
+                        'turn': 1,
+                        'proposal_rejection_count': 1,
+                    },
+                })
+            # Minions of Mordred win - game over
+            else:
+                db.rooms.find_one_and_update({'room_id': data['room']}, {
+                    '$set': {
+                        'is_proposal_ack': False,
+                        'is_proposing_team': False,
+                        'proposal_ack': [],
+                        'proposal_accept': [],
+                        'proposal_reject': [],
+                        'proposal': [],
+                        'is_over': True,
+                    }
+                })
+        else:
+            db.rooms.find_one_and_update({'room_id': data['room']}, {
+                '$push': {
+                    'proposal_ack': CLIENTS[flask.request.sid]['name'],
+                }
+            })
+
+        flask_socketio.emit('ack_proposal_success',
+            {'ack': True}, room=data['room'])
+    else:
+        flask_socketio.emit('ack_proposal_failure')
+
+
 @socketio.on('vote_proposal')
 def vote_proposal(data):
     ''' Vote on a proposed team. '''
@@ -185,6 +249,7 @@ def vote_proposal(data):
             },
             '$set': {
                 'is_proposal_ack': done,
+                'is_voting_proposal': not done,
             },
         })
 
@@ -263,6 +328,7 @@ def _create_game(room, name):
     'proposal_ack': [],
     'proposal_accept': [],
     'proposal_reject': [],
+    'proposal_rejection_count': 0,
     'is_mission': False,
     'is_proposing_team': False,
     'is_proposal_ack': False,
@@ -272,6 +338,7 @@ def _create_game(room, name):
     'turn': 0,
     'mission': 0,
     'missions': [0, 0, 0, 0, 0],
+    'winners': [],
   }
 
 
