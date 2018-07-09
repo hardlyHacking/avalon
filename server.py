@@ -17,6 +17,7 @@ app.config['SECRET_KEY'] = 'secret!'
 socketio = flask_socketio.SocketIO(app)
 client = pymongo.MongoClient()
 db = client.test_database
+db.rooms.create_index('room_id', expireAfterSeconds=24*60*60) # ttl = 24 hours
 
 
 # In-memory mapping of socket-id's to user OPTIONAL_ROLES and rooms
