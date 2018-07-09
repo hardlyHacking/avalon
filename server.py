@@ -248,7 +248,7 @@ def _assign_roles(room, data):
     room['players'] = shuffled_players
     room['is_proposing_team'] = True
     room['max_count'] = [_get_mission_count(n, len(shuffled_players))
-            for n in range(1, len(shuffled_players) + 1)]
+            for n in range(0, len(shuffled_players))]
     return room
 
 
@@ -280,21 +280,21 @@ def _get_mission_count(num_mission, num_players):
         return 2 if num_players < 8 else 3
     elif num_mission == 1:
         return 3 if num_players < 8 else 4
-    elif num_mission == 3:
+    elif num_mission == 2:
         if num_players == 5:
             return 2
         elif num_players == 6 or num_players > 7:
             return 4
         else:
             return 3
-    elif num_mission == 4:
+    elif num_mission == 3:
         if num_players < 7:
             return 3
         elif num_players == 7:
             return 4
         else:
             return 5
-    elif num_mission == 5:
+    elif num_mission == 4:
         if num_players == 5:
             return 3
         elif num_players < 8:
