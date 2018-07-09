@@ -1,3 +1,58 @@
+class MissionCircle extends React.Component {
+
+  constructor(props) {
+    super(props)
+  }
+
+  render() {
+    const circleStyle = {
+      background: 'red',
+      borderRadius: '80px',
+      color: 'white',
+      height: '80px',
+      fontWeight: 'bold',
+      width: '80px',
+      display: 'table',
+      margin: '20px auto'
+    }
+
+    const circleTextStyle = {
+      fontSize: '35px',
+      verticalAlign: 'middle',
+      display: 'table-cell'
+    }
+
+    const cls = this.props.status === 0 ? `bg-secondary` :
+        (this.props.status === 1 ? `bg-success` : `bg-danger`)
+
+    return(
+      <div style={circleStyle} className={cls}>
+        <p style={circleTextStyle} className={"text-center"}>{this.props.count}</p>
+      </div>
+    )
+  }
+}
+
+class MissionBoard extends React.Component {
+
+  constructor(props) {
+    super(props)
+  }
+
+  render() {
+    const missionCircles = this.props.missions.map((m, index) =>
+        <MissionCircle key={index}
+                       count={this.props.maxCount[index]}
+                       status={m} />)
+
+    return(
+      <div className="row">
+        {missionCircles}
+      </div>
+    )
+  }
+}
+
 class TurnLabel extends React.Component {
 
   constructor(props) {
@@ -249,6 +304,8 @@ class Avalon extends React.Component {
         <ActionButton room={this.state.room}
                       roomId={this.props.roomId}
                       selected={this.state.selected} />
+        <MissionBoard maxCount={this.state.room.max_count}
+                      missions={this.state.room.missions} />
       </div>
     )
   }
