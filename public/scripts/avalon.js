@@ -81,37 +81,61 @@ class Player extends React.Component {
   }
 
   render() {
-    const icon = this.props.proposed ?
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-             viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-             className="feather feather-users">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-          <circle cx="9" cy="7" r="4"></circle>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-        </svg>
+    const status = this.props.proposed ?
+        // Team icon
+        <div>
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+               viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+               className="feather feather-users">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
       : (this.props.selected ?
-      <div>
-        <svg xmlns="http://www.w3.org/2000/svg"
-             width="24" height="24" viewBox="0 0 24 24">
-          <path d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"/>
-        </svg>
-      </div> : null)
+        // Checkmark
+        <div>
+          <svg xmlns="http://www.w3.org/2000/svg"
+               width="24" height="24" viewBox="0 0 24 24">
+            <path d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"/>
+          </svg>
+        </div> : null)
     const waiting = this.props.waiting ?
+      // Timer icon
       <div>
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
              viewBox="0 0 24 24" fill="none" stroke="currentColor"
              strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
              className="feather feather-watch">
-          <circle cx="12" cy="12" r="7"></circle>
-          <polyline points="12 9 12 12 13.5 13.5"></polyline>
-          <path d="M16.51 17.35l-.35 3.83a2 2 0 0 1-2 1.82H9.83a2 2 0 0 1-2-1.82l-.35-3.83m.01-10.7l.35-3.83A2 2 0 0 1 9.83 1h4.35a2 2 0 0 1 2 1.82l.35 3.83"></path>
+          <circle cx="12" cy="12" r="7"/>
+          <polyline points="12 9 12 12 13.5 13.5"/>
+          <path d="M16.51 17.35l-.35 3.83a2 2 0 0 1-2 1.82H9.83a2 2 0 0 1-2-1.82l-.35-3.83m.01-10.7l.35-3.83A2 2 0 0 1 9.83 1h4.35a2 2 0 0 1 2 1.82l.35 3.83"/>
         </svg>
       </div> : null
+    const voteStatus = this.props.voteComplete ? (this.props.accepted ?
+        // Thumbsup
+        <div>
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+               viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+               className="feather feather-thumbs-up">
+            <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
+          </svg>
+        </div> :
+        // Thumbsdown
+        <div>
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+               viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+               className="feather feather-thumbs-down">
+            <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/>
+          </svg>
+        </div> ) : null
     return(
-      <div>
-        {this.props.name} {icon} {waiting}
+      <div className="row">
+        {this.props.name} {status} {voteStatus} {waiting}
       </div>
     )
   }
@@ -123,23 +147,37 @@ class PlayerCircle extends React.Component {
     super(props)
   }
 
+  calculateWaiting(room, player, accepted, rejected, acked) {
+    if (room.is_proposing_team) {
+      return name === player
+    } else if (room.is_voting_proposal) {
+      return !(accepted.has(player) || rejected.has(player))
+    } else if (room.is_proposal_ack) {
+      return !acked.has(player)
+    }
+    return false
+  }
+
   render() {
     const turn = this.props.room.turn === 0 ? 0 :
         this.props.room.turn % this.props.room.players.length
     const proposalAccept = new Set(this.props.room.proposal_accept)
     const proposalReject = new Set(this.props.room.proposal_reject)
     const proposed = new Set(this.props.room.proposal)
+    const acked = new Set(this.props.room.proposal_ack)
     const name = this.props.room.players[turn]
 
     const playerList = this.props.room.players.map((p, index) => {
       const c = index === turn ? "list-group-item active" : "list-group-item"
-      const isWaiting = this.props.room.is_proposing_team ?
-        name === p : !(proposalAccept.has(p) || proposalReject.has(p))
+      const isWaiting = this.calculateWaiting(
+          this.props.room, p, proposalAccept, proposalReject, acked)
       return <li key={p}
                  className={c}
                  onClick={() => this.props.onClick(p)}>
                <Player name={p}
                        waiting={isWaiting}
+                       voteComplete={this.props.room.is_proposal_ack}
+                       accepted={proposalAccept.has(p)}
                        selected={this.props.selected.has(p)}
                        proposed={proposed.has(p)} />
              </li>
