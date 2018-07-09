@@ -59,6 +59,17 @@ class TurnLabel extends React.Component {
     super(props)
   }
 
+  getSubtext(name) {
+    if (this.props.isMission) {
+      return `Mission in progress`
+    } else if (this.props.isProposingTeam) {
+      return `Waiting for ${name}'s proposal'`
+    } else if (this.props.isVotingProposal) {
+      return `Vote on ${name}'s proposal'`
+    }
+    return null
+  }
+
   render() {
     const name = this.props.turn === 0 ? this.props.players[0] :
         this.props.players[this.props.players.length % this.props.turn]
