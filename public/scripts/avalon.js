@@ -212,6 +212,7 @@ class ActionButton extends React.Component {
 
     this.ackProposal = this.ackProposal.bind(this)
     this.proposeTeam = this.proposeTeam.bind(this)
+    this.voteMission = this.voteMission.bind(this)
     this.voteProposal = this.voteProposal.bind(this)
   }
 
@@ -223,6 +224,13 @@ class ActionButton extends React.Component {
     socket.emit('propose_team', {
       'room': this.props.roomId,
       'proposal': [...this.props.selected]
+    })
+  }
+
+  voteMission(vote) {
+    socket.emit('vote_mission', {
+      'room': this.props.roomId,
+      'vote': vote
     })
   }
 
@@ -279,12 +287,25 @@ class ActionButton extends React.Component {
         </div>
       )
     } else if (room.is_mission) {
-      return(
-        <div>
-          <button type="button" className="btn btn-success">Success</button>
-          <button type="button" className="btn btn-danger">Fail</button>
-        </div>
-      )
+      const proposal = new Set(room.proposal)
+      const votes = new Set(room.mission_vote)
+      if (proposal.has(room.current_player)) {
+        const actionDisabled = votes.has(room.current_player)
+        return(
+          <div>
+            <button type="button"
+                    className="btn btn-success"
+                    disabled={actionDisabled}
+                    onClick={() => this.voteMission(true)}
+            >Success</button>
+            <button type="button"
+                    className="btn btn-danger"
+                    disabled={actionDisabled}
+                    onClick={() => this.voteMission(false)}
+            >Fail</button>
+          </div>
+        )
+      }
     }
 
     return null
@@ -304,11 +325,11 @@ class Avalon extends React.Component {
       this.setState({ room: JSON.parse(data['room']), fetched: true })
     }.bind(this))
 
-    socket.on('propose_team_failure', function(data) {
-      alert('Invalid proposal')
-    })
-
     socket.on('propose_team_success', function(data) {
+      socket.emit('room_status', {'room': this.props.roomId})
+    }.bind(this))
+
+    socket.on('vote_mission_success', function(data) {
       socket.emit('room_status', {'room': this.props.roomId})
     }.bind(this))
 

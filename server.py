@@ -240,7 +240,8 @@ def vote_proposal(data):
             not CLIENTS[flask.request.sid]['name'] in room['proposal_accept'] \
             and not CLIENTS[flask.request.sid]['name'] in room['proposal_reject']:
         key = 'proposal_accept' if data['vote'] else 'proposal_reject'
-        done = len(room['proposal_accept']) + len(room['proposal_reject']) == len(room['players']) - 1
+        done = len(room['proposal_accept']) + \
+                len(room['proposal_reject']) == len(room['players']) - 1
         name = CLIENTS[flask.request.sid]['name']
         db.rooms.find_one_and_update({'room_id': data['room']}, {
             '$push': {
@@ -256,6 +257,50 @@ def vote_proposal(data):
             {'vote': data['vote']}, room=data['room'])
     else:
         flask_socketio.emit('vote_proposal_failure')
+
+
+@socketio.on('vote_mission')
+def vote_mission(data):
+    ''' Vote on a mission. '''
+    room = db.rooms.find_one({'room_id': data['room']})
+    if not room is None and flask.request.sid in CLIENTS and \
+            not CLIENTS[flask.request.sid]['name'] in room['mission_vote']:
+        done = len(room['mission_vote']) == room['max_count'][room['mission']] - 1
+        if done:
+            room['mission_vote_outcomes'].append(data['vote'])
+            num_fails = room['mission_vote_outcomes'].count(False)
+            passes = num_fails > 0
+            missions = room['missions']
+            missions[room['mission']] = 1 if passes else 2
+            game_over = missions.count(2) == 2 if not passes else False
+
+            db.rooms.find_one_and_update({'room_id': data['room']}, {
+                '$set': {
+                    'is_over': game_over,
+                    'is_mission': False,
+                    'is_proposing_team': True,
+                    'missions': missions,
+                    'mission_vote': [],
+                    'mission_vote_outcomes': [],
+                    'proposal': [],
+                },
+                '$inc': {
+                    'turn': 1,
+                    'mission': 1,
+                },
+            })
+        else:
+            db.rooms.find_one_and_update({'room_id': data['room']}, {
+                '$push': {
+                    'mission_vote': CLIENTS[flask.request.sid]['name'],
+                    'mission_vote_outcomes': data['vote'],
+                },
+            })
+
+        flask_socketio.emit('vote_mission_success',
+            {'vote_mission': 'success'}, room=data['room'])
+    else:
+        flask_socketio.emit('vote_mission_failure')
 
 
 def _assign_roles(room, data):
@@ -336,6 +381,8 @@ def _create_game(room, name):
     'is_over': False,
     'turn': 0,
     'mission': 0,
+    'mission_vote': [],
+    'mission_vote_outcomes': [],
     'missions': [0, 0, 0, 0, 0],
     'winners': [],
   }
