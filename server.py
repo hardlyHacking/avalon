@@ -245,7 +245,6 @@ def vote_proposal(data):
         db.rooms.find_one_and_update({'room_id': data['room']}, {
             '$push': {
                 key: name,
-                'proposal_ack': name,
             },
             '$set': {
                 'is_proposal_ack': done,
