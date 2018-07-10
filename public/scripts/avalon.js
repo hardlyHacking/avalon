@@ -249,23 +249,31 @@ class ActionButton extends React.Component {
         </div>
       )
     } else if (room.is_voting_proposal) {
+      const proposalAccept = new Set(room.proposal_accept)
+      const proposalReject = new Set(room.proposal_reject)
+      const voteDisabled = proposalAccept.has(room.current_player) ||
+          proposalReject.has(room.current_player)
       return(
         <div>
           <button type="button"
                   className="btn btn-success"
+                  disabled={voteDisabled}
                   onClick={() => this.voteProposal(true)}
           >Accept</button>
           <button type="button"
                   className="btn btn-danger"
+                  disabled={voteDisabled}
                   onClick={() => this.voteProposal(false)}
           >Reject</button>
         </div>
       )
     } else if (room.is_proposal_ack) {
+      const proposalAck = new Set(room.proposal_ack)
       return(
         <div>
           <button type="button"
                   className="btn btn-secondary"
+                  disabled={proposalAck.has(room.current_player)}
                   onClick={this.ackProposal}
           >Ok</button>
         </div>
@@ -305,6 +313,10 @@ class Avalon extends React.Component {
     }.bind(this))
 
     socket.on('vote_proposal_success', function(data) {
+      socket.emit('room_status', {'room': this.props.roomId})
+    }.bind(this))
+
+    socket.on('ack_proposal_success', function(data) {
       socket.emit('room_status', {'room': this.props.roomId})
     }.bind(this))
 
