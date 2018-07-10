@@ -218,6 +218,7 @@ class ActionButton extends React.Component {
 
   ackProposal() {
     socket.emit('ack_proposal', { 'room': this.props.roomId })
+    this.props.onClick()
   }
 
   proposeTeam() {
@@ -225,6 +226,7 @@ class ActionButton extends React.Component {
       'room': this.props.roomId,
       'proposal': [...this.props.selected]
     })
+    this.props.onClick()
   }
 
   voteMission(vote) {
@@ -232,6 +234,7 @@ class ActionButton extends React.Component {
       'room': this.props.roomId,
       'vote': vote
     })
+    this.props.onClick()
   }
 
   voteProposal(vote) {
@@ -239,6 +242,7 @@ class ActionButton extends React.Component {
       'room': this.props.roomId,
       'vote': vote
     })
+    this.props.onClick()
   }
 
   render() {
@@ -341,7 +345,14 @@ class Avalon extends React.Component {
       socket.emit('room_status', {'room': this.props.roomId})
     }.bind(this))
 
+    this.clearSelected = this.clearSelected.bind(this)
     this.onPlayerClick = this.onPlayerClick.bind(this)
+  }
+
+  clearSelected() {
+    this.setState({
+      selected: new Set()
+    })
   }
 
   onPlayerClick(player) {
@@ -385,7 +396,8 @@ class Avalon extends React.Component {
                       room={this.state.room} />
         <ActionButton room={this.state.room}
                       roomId={this.props.roomId}
-                      selected={this.state.selected} />
+                      selected={this.state.selected}
+                      onClick={this.clearSelected} />
         <MissionBoard maxCount={this.state.room.max_count}
                       missions={this.state.room.missions} />
       </div>
