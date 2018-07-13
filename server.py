@@ -187,6 +187,7 @@ def ack_proposal(data):
                     'proposal_ack': [],
                     'proposal_accept': [],
                     'proposal_reject': [],
+                    'proposal_rejection_count': 0,
                 },
             })
         # All have ack-ed - proposal rejected
@@ -271,10 +272,10 @@ def vote_mission(data):
         done = len(room['mission_vote']) == room['max_count'][room['mission']] - 1
         if done:
             room['mission_vote_outcomes'].append(data['vote'])
-            passes = room['mission_vote_outcomes'].count(False) > 0
+            passes = room['mission_vote_outcomes'].count(False) == 0
             missions = room['missions']
             missions[room['mission']] = 1 if passes else 2
-            game_over = missions.count(2) == 2 if not passes else False
+            game_over = missions.count(3) == 2 if not passes else False
 
             db.rooms.find_one_and_update({'room_id': data['room']}, {
                 '$set': {
