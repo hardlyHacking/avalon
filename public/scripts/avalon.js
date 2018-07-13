@@ -1,3 +1,44 @@
+class ProposalCountCircle extends React.Component {
+
+  constructor(props) {
+    super(props)
+  }
+
+  render() {
+    const circleStyle = {
+      background: 'red',
+      borderRadius: '30px',
+      color: 'white',
+      height: '30px',
+      fontWeight: 'bold',
+      width: '30px',
+      display: 'table',
+      margin: '8px auto'
+    }
+    const cls = this.props.selected ? `bg-danger` : `bg-secondary`
+    return(
+      <div style={circleStyle} className={cls}></div>
+    )
+  }
+}
+
+class ProposalCount extends React.Component {
+
+  constructor(props) {
+    super(props)
+  }
+
+  render() {
+    const proposalCountRows = Array(5).fill().map((_, i) => i).map(i =>
+        <ProposalCountCircle selected={this.props.count == i} />)
+    return(
+      <div>
+        {proposalCountRows}
+      </div>
+    )
+  }
+}
+
 class MissionCircle extends React.Component {
 
   constructor(props) {
@@ -400,6 +441,7 @@ class Avalon extends React.Component {
                       onClick={this.clearSelected} />
         <MissionBoard maxCount={this.state.room.max_count}
                       missions={this.state.room.missions} />
+        <ProposalCount count={this.state.room.proposal_rejection_count} />
       </div>
     )
   }

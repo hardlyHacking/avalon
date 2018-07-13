@@ -354,7 +354,7 @@ def _assign_roles(room, data):
         num_good += 1
 
     # Return modified object
-    room['_is_double_fail'] = False
+    room['is_double_fail'] = False
     room['roles'] = mapping
     shuffled_players = [k for k in mapping]
     random.shuffle(shuffled_players)
