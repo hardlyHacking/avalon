@@ -255,7 +255,7 @@ class ActionButton extends React.Component {
         <div>
           <button type="button"
                   className="btn btn-secondary"
-                  disabled={btnDisabled}
+                  disabled={btnDisabled || this.props.room.is_over}
                   onClick={this.proposeTeam}
           >Propose</button>
         </div>
@@ -269,12 +269,12 @@ class ActionButton extends React.Component {
         <div>
           <button type="button"
                   className="btn btn-success"
-                  disabled={voteDisabled}
+                  disabled={voteDisabled || this.props.room.is_over}
                   onClick={() => this.voteProposal(true)}
           >Accept</button>
           <button type="button"
                   className="btn btn-danger"
-                  disabled={voteDisabled}
+                  disabled={voteDisabled || this.props.room.is_over}
                   onClick={() => this.voteProposal(false)}
           >Reject</button>
         </div>
@@ -285,7 +285,7 @@ class ActionButton extends React.Component {
         <div>
           <button type="button"
                   className="btn btn-secondary"
-                  disabled={proposalAck.has(room.current_player)}
+                  disabled={proposalAck.has(room.current_player) || this.props.room.is_over}
                   onClick={this.ackProposal}
           >Ok</button>
         </div>
@@ -299,12 +299,12 @@ class ActionButton extends React.Component {
           <div>
             <button type="button"
                     className="btn btn-success"
-                    disabled={actionDisabled}
+                    disabled={actionDisabled || this.props.room.is_over}
                     onClick={() => this.voteMission(true)}
             >Success</button>
             <button type="button"
                     className="btn btn-danger"
-                    disabled={actionDisabled}
+                    disabled={actionDisabled || this.props.room.is_over}
                     onClick={() => this.voteMission(false)}
             >Fail</button>
           </div>

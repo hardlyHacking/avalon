@@ -150,8 +150,8 @@ def propose_team(data):
     ''' Propose a team. '''
     room = db.rooms.find_one({'room_id': data['room']})
 
-    if not room is None and room['is_started'] and \
-            flask.request.sid in CLIENTS and \
+    if not room is None and room['is_started'] and not room['is_over'] \
+            and flask.request.sid in CLIENTS and \
             room['players'][room['turn'] % len(room['players'])] \
             == CLIENTS[flask.request.sid]['name']:
         db.rooms.find_one_and_update({'room_id': data['room']}, {
@@ -173,7 +173,8 @@ def ack_proposal(data):
     ''' Acknowledge the proposal. '''
     room = db.rooms.find_one({'room_id': data['room']})
     if not room is None and flask.request.sid in CLIENTS and \
-            not CLIENTS[flask.request.sid]['name'] in room['proposal_ack']:
+            not CLIENTS[flask.request.sid]['name'] in room['proposal_ack'] \
+            and not room['is_over']:
         done = len(room['proposal_ack']) == len(room['players']) - 1
         accepted = len(room['proposal_accept']) > len(room['proposal_reject'])
 
@@ -236,9 +237,10 @@ def ack_proposal(data):
 def vote_proposal(data):
     ''' Vote on a proposed team. '''
     room = db.rooms.find_one({'room_id': data['room']})
-    if not room is None and flask.request.sid in CLIENTS and \
-            not CLIENTS[flask.request.sid]['name'] in room['proposal_accept'] \
-            and not CLIENTS[flask.request.sid]['name'] in room['proposal_reject']:
+    sid = flask.request.sid
+    if not room is None and sid in CLIENTS and not room['is_over']\
+            and not CLIENTS[sid]['name'] in room['proposal_accept'] \
+            and not CLIENTS[sid]['name'] in room['proposal_reject']:
         key = 'proposal_accept' if data['vote'] else 'proposal_reject'
         done = len(room['proposal_accept']) + \
                 len(room['proposal_reject']) == len(room['players']) - 1
@@ -264,12 +266,12 @@ def vote_mission(data):
     ''' Vote on a mission. '''
     room = db.rooms.find_one({'room_id': data['room']})
     if not room is None and flask.request.sid in CLIENTS and \
-            not CLIENTS[flask.request.sid]['name'] in room['mission_vote']:
+            not CLIENTS[flask.request.sid]['name'] in room['mission_vote'] \
+            and not room['is_over']:
         done = len(room['mission_vote']) == room['max_count'][room['mission']] - 1
         if done:
             room['mission_vote_outcomes'].append(data['vote'])
-            num_fails = room['mission_vote_outcomes'].count(False)
-            passes = num_fails > 0
+            passes = room['mission_vote_outcomes'].count(False) > 0
             missions = room['missions']
             missions[room['mission']] = 1 if passes else 2
             game_over = missions.count(2) == 2 if not passes else False
