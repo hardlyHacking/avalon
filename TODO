@@ -5,5 +5,5 @@
   - Show proper bootstrap alert (success)
 4. Fix join room race condition where occasionally it shows create game instead of join
   - Probably lower the typeahead timeout and disable the name field until socket response
-5. Room_status should track the role of the requester and only give the proper roles back
-6. Get rid of react js warnings
+5. Get rid of react js warnings
+6. Add support for optional roles
