@@ -293,7 +293,7 @@ class ActionButton extends React.Component {
 
     const isYourTurn = room.current_player === room.players[room.turn]
     if (room.is_proposing_team && isYourTurn) {
-      const btnDisabled = this.props.selected.size !== room.max_count[room.turn]
+      const btnDisabled = this.props.selected.size !== room.max_count[room.mission]
       return(
         <div>
           <button type="button"
@@ -408,7 +408,7 @@ class Avalon extends React.Component {
         })
       } else {
         const selected = this.state.selected.size
-        const allowed = room.max_count[room.turn]
+        const allowed = room.max_count[room.mission]
         if (selected < allowed) {
           this.setState({
             selected: new Set([...this.state.selected].concat(player))
