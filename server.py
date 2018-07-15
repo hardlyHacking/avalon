@@ -243,6 +243,7 @@ def ack_proposal(data):
                         'proposal_reject': [],
                         'proposal': [],
                         'is_over': True,
+                        'winner': 'Minions of Mordred',
                     }
                 })
         else:
@@ -299,7 +300,13 @@ def vote_mission(data):
             passes = room['mission_vote_outcomes'].count(False) == 0
             missions = room['missions']
             missions[room['mission']] = 1 if passes else 2
-            game_over = missions.count(3) == 2 if not passes else False
+            winner = ''
+            if missions.count(2) == 3:
+                winner = 'Minions or Mordred'
+                game_over = True
+            elif missions.count(1) == 3:
+                winner = 'Loyal Servants of Arthur'
+                game_over = True
 
             db.rooms.find_one_and_update({'room_id': data['room']}, {
                 '$set': {
@@ -310,6 +317,7 @@ def vote_mission(data):
                     'mission_vote': [],
                     'mission_vote_outcomes': [],
                     'proposal': [],
+                    'winner': winner,
                 },
                 '$inc': {
                     'turn': 1,

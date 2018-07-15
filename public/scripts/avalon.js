@@ -427,6 +427,14 @@ class Avalon extends React.Component {
       )
     }
 
+    if (this.state.room.is_over) {
+      return(
+        <div>
+          <p>{this.state.room.winner} have won.</p>
+        </div>
+      )
+    }
+
     const room = this.state.room
     const evil = !('roles' in room) ? new Set() :
       new Set(Object.keys(room.roles).filter(key => room.roles[key] === "Evil"))
