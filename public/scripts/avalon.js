@@ -150,7 +150,7 @@ class Player extends React.Component {
     const status = this.props.proposed ?
         // Team icon
         <div>
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+          <svg xmlns="https://www.w3.org/2000/svg" width="24" height="24"
                viewBox="0 0 24 24" fill="none" stroke="currentColor"
                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
                className="feather feather-users">
@@ -163,7 +163,7 @@ class Player extends React.Component {
       : (this.props.selected ?
         // Checkmark
         <div>
-          <svg xmlns="http://www.w3.org/2000/svg"
+          <svg xmlns="https://www.w3.org/2000/svg"
                width="24" height="24" viewBox="0 0 24 24">
             <path d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"/>
           </svg>
@@ -171,7 +171,7 @@ class Player extends React.Component {
     const waiting = this.props.waiting ?
       // Timer icon
       <div>
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+        <svg xmlns="https://www.w3.org/2000/svg" width="24" height="24"
              viewBox="0 0 24 24" fill="none" stroke="currentColor"
              strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
              className="feather feather-watch">
@@ -183,7 +183,7 @@ class Player extends React.Component {
     const voteStatus = this.props.voteComplete ? (this.props.accepted ?
         // Thumbsup
         <div>
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+          <svg xmlns="https://www.w3.org/2000/svg" width="24" height="24"
                viewBox="0 0 24 24" fill="none" stroke="currentColor"
                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
                className="feather feather-thumbs-up">
@@ -192,7 +192,7 @@ class Player extends React.Component {
         </div> :
         // Thumbsdown
         <div>
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+          <svg xmlns="https://www.w3.org/2000/svg" width="24" height="24"
                viewBox="0 0 24 24" fill="none" stroke="currentColor"
                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
                className="feather feather-thumbs-down">
