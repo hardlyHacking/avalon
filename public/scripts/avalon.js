@@ -1,3 +1,17 @@
+class PlayerRole extends React.Component {
+
+  constructor(props) {
+    super(props)
+  }
+
+  render() {
+    return(
+      <div><h2>Your role: {this.props.role}</h2></div>
+    )
+  }
+
+}
+
 class ProposalCountCircle extends React.Component {
 
   constructor(props) {
@@ -445,6 +459,7 @@ class Avalon extends React.Component {
                    isProposingTeam={room.is_proposing_team}
                    isMission={room.is_mission}
                    isVotingProposal={room.is_voting_proposal} />
+        <PlayerRole role={room.you} />
         <PlayerCircle onClick={this.onPlayerClick}
                       evil={evil}
                       selected={this.state.selected}

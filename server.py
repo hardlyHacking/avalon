@@ -126,6 +126,8 @@ def room_status(data):
     if room is None:
         flask_socketio.emit('room_status_error', {'msg': 'Invalid room'})
     elif room['is_started']:
+        # Add the player's own known role
+        room['you'] = room['roles'][name]
         # Process roles to only reveal the proper roles to players
         if room['roles'][name] in EVIL and not room['roles'][name] == 'Oberon':
             for p in list(room['roles']):
@@ -150,7 +152,6 @@ def room_status(data):
         flask_socketio.emit('room_status', {'room': bson.json_util.dumps(room)})
     else:
         flask_socketio.emit('room_status', {'room': bson.json_util.dumps(room)})
-
 
 
 @socketio.on('start_game')
