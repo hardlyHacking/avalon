@@ -300,6 +300,7 @@ def vote_mission(data):
             passes = room['mission_vote_outcomes'].count(False) == 0
             missions = room['missions']
             missions[room['mission']] = 1 if passes else 2
+            game_over = False
             winner = ''
             if missions.count(2) == 3:
                 winner = 'Minions or Mordred'
