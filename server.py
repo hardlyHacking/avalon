@@ -217,7 +217,7 @@ def ack_proposal(data):
         # All have ack-ed - proposal rejected
         elif done:
             # Increment rejection count and move to next person
-            if room['proposal_rejection_count'] < 5:
+            if room['proposal_rejection_count'] < 4:
                 db.rooms.find_one_and_update({'room_id': data['room']}, {
                     '$set': {
                         'is_proposal_ack': False,
