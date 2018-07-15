@@ -186,7 +186,7 @@ class Player extends React.Component {
           </svg>
         </div> ) : null
     return(
-      <div className="row">
+      <div className={this.props.active ? "row font-weight-bold" : "row"}>
         {this.props.name} {status} {voteStatus} {waiting}
       </div>
     )
@@ -218,15 +218,17 @@ class PlayerCircle extends React.Component {
     const proposed = new Set(this.props.room.proposal)
     const acked = new Set(this.props.room.proposal_ack)
     const name = this.props.room.players[turn]
+    const evil = this.props.evil
 
     const playerList = this.props.room.players.map((p, index) => {
-      const c = index === turn ? "list-group-item active" : "list-group-item"
+      const c = evil.has(p) ? "list-group-item list-group-item-danger" : "list-group-item"
       const isWaiting = this.calculateWaiting(
           this.props.room, p, proposalAccept, proposalReject, acked)
       return <li key={p}
                  className={c}
                  onClick={() => this.props.onClick(p)}>
                <Player name={p}
+                       active={index === turn}
                        waiting={isWaiting}
                        voteComplete={this.props.room.is_proposal_ack}
                        accepted={proposalAccept.has(p)}
@@ -425,23 +427,27 @@ class Avalon extends React.Component {
       )
     }
 
+    const room = this.state.room
+    const evil = !('roles' in room) ? new Set() :
+      new Set(Object.keys(room.roles).filter(key => room.roles[key] === "Evil"))
     return(
       <div>
-        <TurnLabel players={this.state.room.players}
-                   turn={this.state.room.turn}
-                   isProposingTeam={this.state.room.is_proposing_team}
-                   isMission={this.state.room.is_mission}
-                   isVotingProposal={this.state.room.is_voting_proposal} />
+        <TurnLabel players={room.players}
+                   turn={room.turn}
+                   isProposingTeam={room.is_proposing_team}
+                   isMission={room.is_mission}
+                   isVotingProposal={room.is_voting_proposal} />
         <PlayerCircle onClick={this.onPlayerClick}
+                      evil={evil}
                       selected={this.state.selected}
-                      room={this.state.room} />
-        <ActionButton room={this.state.room}
+                      room={room} />
+        <ActionButton room={room}
                       roomId={this.props.roomId}
                       selected={this.state.selected}
                       onClick={this.clearSelected} />
-        <MissionBoard maxCount={this.state.room.max_count}
-                      missions={this.state.room.missions} />
-        <ProposalCount count={this.state.room.proposal_rejection_count} />
+        <MissionBoard maxCount={room.max_count}
+                      missions={room.missions} />
+        <ProposalCount count={room.proposal_rejection_count} />
       </div>
     )
   }

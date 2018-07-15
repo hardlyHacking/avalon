@@ -6,7 +6,7 @@ import random
 
 
 ALWAYS_PRESENT = ['Assassin', 'Merlin']
-EVIL = ['Mordred, Morgana, Oberon', 'Minion of Mordred']
+EVIL = ['Mordred', 'Morgana', 'Oberon', 'Minion of Mordred', 'Assassin']
 GOOD = ['Merlin', 'Percival', 'Loyal Servant of Arthur']
 GENERIC_BAD, GENERIC_GOOD = 'Minion of Mordred', 'Loyal Servant of Arthur'
 OPTIONAL_ROLES = ['Mordred', 'Morgana', 'Percival', 'Oberon']
@@ -119,14 +119,38 @@ def join_game(data):
 
 @socketio.on('room_status')
 def room_status(data):
-  ''' General endpoint to fetch game state. '''
-  room = db.rooms.find_one({'room_id': data['room']})
-  name = CLIENTS[flask.request.sid]['name']
-  room['current_player'] = name
-  if room is None:
-    flask_socketio.emit('room_status_error', {'msg': 'Invalid room'})
-  else:
-    flask_socketio.emit('room_status', {'room': bson.json_util.dumps(room)})
+    ''' General endpoint to fetch game state. '''
+    room = db.rooms.find_one({'room_id': data['room']})
+    name = CLIENTS[flask.request.sid]['name']
+    room['current_player'] = name
+    if room is None:
+        flask_socketio.emit('room_status_error', {'msg': 'Invalid room'})
+    elif room['is_started']:
+        # Process roles to only reveal the proper roles to players
+        if room['roles'][name] in EVIL and not room['roles'][name] == 'Oberon':
+            for p in list(room['roles']):
+                if not room['roles'][p] in EVIL:
+                    del(room['roles'][p])
+                else:
+                    room['roles'][p] = 'Evil'
+        elif room['roles'][name] == 'Merlin':
+            for p in list(room['roles']):
+                if not room['roles'][p] in EVIL or room['roles'][p] == 'Mordred':
+                    del(room['roles'][p])
+                else:
+                    room['roles'][p] = 'Evil'
+        elif room['roles'][name] == 'Percival':
+            for p in list(room['roles']):
+                if room['roles'][p] != 'Morgana' and room['roles'][p] != 'Merlin':
+                    del(room['roles'][p])
+                else:
+                    room['roles'][p] = 'Merlin?'
+        else:
+            del(room['roles'])
+        flask_socketio.emit('room_status', {'room': bson.json_util.dumps(room)})
+    else:
+        flask_socketio.emit('room_status', {'room': bson.json_util.dumps(room)})
+
 
 
 @socketio.on('start_game')
