@@ -1,7 +1,8 @@
 import bson.json_util
 import flask
+import flask_pymongo
 import flask_socketio
-import pymongo
+import os
 import random
 
 
@@ -12,11 +13,16 @@ GENERIC_BAD, GENERIC_GOOD = 'Minion of Mordred', 'Loyal Servant of Arthur'
 OPTIONAL_ROLES = ['Mordred', 'Morgana', 'Percival', 'Oberon']
 
 
+MONGO_URL = os.environ.get('MONGO_URL')
+if not MONGO_URL:
+    MONGO_URL = "mongodb://localhost:27017/rest";
+
+
 app = flask.Flask(__name__, static_url_path='', static_folder='public')
 app.config['SECRET_KEY'] = 'secret!'
+app.config['MONGO_URI'] = MONGO_URL
 socketio = flask_socketio.SocketIO(app)
-client = pymongo.MongoClient()
-db = client.test_database
+db = flask_pymongo.PyMongo(app).db
 db.rooms.create_index('room_id', expireAfterSeconds=24*60*60) # ttl = 24 hours
 
 
